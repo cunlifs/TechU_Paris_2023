@@ -8,6 +8,6 @@
     - ibm.power_aix
     
   tasks:
-    - name: Collect LPAR information for host "{{ inventory_hostname }}"
+    - name: "Collect LPAR information for host {{ inventory_hostname }}"
       ibm.power_aix.lpar_facts: 
       register: lpar_facts_info
