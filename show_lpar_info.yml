@@ -12,6 +12,6 @@
       ibm.power_aix.lpar_facts: 
       register: lpar_facts_info
 
-      name: Show LPAR facts
+    - name: Show LPAR facts
       debug:
         var: lpar_facts_info
