@@ -5,7 +5,7 @@
   gather_facts: yes
 
   collections:
-    - name: ibm.power_aix
+    - ibm.power_aix
     
   tasks:
     - name: Collect LPAR information for host {{ inventory_hostname }}
