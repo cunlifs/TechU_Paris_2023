@@ -14,4 +14,4 @@
 
     - name: Show LPAR facts
       debug:
-        var: lpar_facts_info
+        var: lpar_facts_info.ansible_facts.lpar
