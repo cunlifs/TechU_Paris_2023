@@ -15,3 +15,6 @@
     - name: Show LPAR facts
       debug:
         var: lpar_facts_info.ansible_facts.lpar
+
+    - name: Sleep
+      command: 'sleep 180'
