@@ -21,3 +21,7 @@
       filters:
         name: "{{ VM_Name }}"
     register: VM_Name_result
+
+  - name: Show results
+    debug:
+      var: VM_Name_result
