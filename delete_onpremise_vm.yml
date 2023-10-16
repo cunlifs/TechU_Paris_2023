@@ -1,0 +1,23 @@
+---
+- name: Delete VM via PowerVC/OpenStack 
+# This playbook requires new VM name
+  hosts: localhost
+  gather_facts: false
+
+# If calling from Tower the following variables need to be entered
+  vars_prompt:
+    - name: "VM_Name"
+      prompt: "Enter name of VM to delete"
+
+  tasks:
+  - name: Display VM Name
+    debug:
+      msg: "Deleting VM {{ VM_Name }}"
+
+  - name: Delete VM instance
+    openstack.cloud.server:
+      state:    absent
+      name:     "{{ VM_Name }}"
+    register: vm_delete
+  
+
