@@ -1,0 +1,34 @@
+---
+# tasks file for VM_name_list
+# Uses openstack.cloud collection
+
+  - name: Retrieve VM list to see if {{ VM_Name }} already exists
+    openstack.cloud.server_info:
+      filters:
+        name: "{{ VM_Name }}"
+    register: result
+    
+  - name: Debug - Output server_info results
+    debug:
+      var: result
+      verbosity: 1
+
+  - name: Check if VM already exists
+    set_fact:
+      VM_exists_frame_name: "{{ result.servers[0].hypervisor_hostname }}"
+    when: result.servers[0].name is defined
+
+  - name: Alert and exit if VM VM_exists
+    block:
+    - name: Alert that VM already VM_exists
+      debug:
+        msg: 
+         - "A VM with the name {{ VM_Name }} already exists on server {{ VM_exists_frame_name }}"
+         - "Exiting playbook......"
+    - name: Quit playbook
+      meta: end_play
+    when: VM_exists_frame_name is defined
+
+  - name: VM does not already exist
+    debug:
+      msg: "VM {{ VM_Name }} does not exist, continuing playbook"
