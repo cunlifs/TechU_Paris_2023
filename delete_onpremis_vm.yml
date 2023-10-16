@@ -1,0 +1,91 @@
+---
+- name: Build a new VM via PowerVC/OpenStack with 1 network interfaces and Pool IP
+# This playbook requires new VM name and existing image, flavor, network names
+  hosts: localhost
+  gather_facts: false
+
+# If calling from Tower the following variables need to be entered
+  vars_prompt:
+    - name: "VM_Name"
+      prompt: "Enter name of new VM to create"
+    - name: "VM_Net_Name_1"
+      prompt: "Enter name of primary network"
+    - name: "VM_Image_Name"
+      prompt: "Enter name of image to use"
+    - name: "VM_Flavor_Name"
+      prompt: "Enter name of compute template to use"
+
+  tasks:
+  - name: Display VM Name
+    debug:
+      msg: "Creating VM {{ VM_Name }}"
+
+  - name: List any existing VMs with the same name
+    import_role:
+      name: VM_name_list
+
+  - name: Show details before creating VM
+    debug:
+      msg: "
+      Creating New VM        : '{{ VM_Name }}'
+      Primary Network        : '{{VM_Net_Name_1 }}'
+      Using Image            : '{{ VM_Image_Name }}' 
+      Using Compute Template : '{{ VM_Flavor_Name }}' "
+
+  - name: Create a new VM instance
+    openstack.cloud.server:
+      state:    present
+      name:     "{{ VM_Name }}"
+      image:    "{{ VM_Image_Name }}"
+      flavor:   "{{ VM_Flavor_Name }}"
+      timeout:  1200
+      network:  "{{ VM_Net_Name_1 }}"
+      availability_zone: "Default Group:9119MHE_21C4837"
+   # key_name:  "AWX-30-key"     
+      meta:
+        hostname: "{{ VM_Name }}"
+    register: vm
+  
+  - name: Retrieve VM list
+    openstack.cloud.server_info:
+      filters:
+        name: "{{ VM_Name }}"
+    register: VM_Name_result
+
+  - name: Set VM list
+    set_fact:
+      result: "{{ VM_Name_result }}"
+        
+  - name: Build VM list
+    set_fact:
+       VM_List: "{{ result | json_query(query) }}"     
+    vars:
+        query: 'servers[*].
+              {Name: hostname, Frame: hypervisor_hostname, IP: access_ipv4, State: status}'
+    
+  - name: Debug - Output VM List
+    debug:
+        var: VM_List
+        verbosity: 1
+  
+  - name: Output List
+    set_fact:
+       VM_IP: "{{ item.IP }}"
+       VM_hostname: "{{ item.Name }}"
+       VM_framename: "{{ item.Frame }}"
+       VM_state: "{{ item.State }}"
+    with_items: "{{ VM_List }}"
+        
+  - name: Show new VM details
+    debug:
+      msg:
+        - "VM hostname: {{ VM_hostname }}"
+        - "VM IP address: {{ VM_IP }}"
+        - "VM server: {{ VM_framename }}"
+        - "VM state: {{ VM_state }}"
+ 
+  - name: Wait for SSH port to be up on {{ VM_Name }}
+    wait_for: 
+      host: "{{ VM_IP }}"
+      port: 22
+      timeout: 300
