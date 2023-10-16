@@ -1,0 +1,279 @@
+---
+- name: Playbook to change the size of a VM in PowerVC using API
+  hosts: localhost
+  gather_facts: false
+
+  vars_prompt:
+    - name: vm_name
+      prompt: "Name of VM to resize"
+    - name: PowerVC_password
+      prompt: "PowerVC password"
+  #  - name: percentage_change
+  #    prompt: "Percentage change %"
+    - name: new_vcpus
+      prompt: "Required number of virtual CPUs"
+    - name: new_total_proc_units
+      prompt: "Required number of entitled Cores"
+    - name: new_total_memory_mb
+      prompt: "Required amount of memory (MB):"
+
+  vars:
+    powervc_host: "9.196.117.90"
+    auth_port: "5000"
+    nova_port: "8774"
+    PowerVC_ID: "root"
+  
+  tasks:
+  #  - name: Convert values to integers
+  #    set_fact:
+  #       new_total_memory_mb: "{{ new_total_memory_mb_input|int + 0 }}"
+
+  #  - name: Report variable types
+  #    debug:
+  #      msg:
+  #        - "Total memory: {{ new_total_memory_mb|type_debug }}"
+  #        - "Total memory input: {{ new_total_memory_mb_input|type_debug }}"
+
+    - name: Show new values to be used in VM resize
+      debug:
+        msg:
+         - "Resizing VM:  {{ vm_name }}"
+         - "New vCPU #:   {{ new_vcpus }}"
+         - "New CPU #:    {{ new_total_proc_units }}"
+         - "New Mem(MB)#: {{ new_total_memory_mb }}"
+
+    - name: Connect to PowerVC and collect auth token
+      uri:
+         url: https://{{ powervc_host }}:{{ auth_port }}/v3/auth/tokens
+         method: POST
+         body: '{"auth":{
+                   "scope":{
+                      "project":{
+                         "domain":{
+                            "name":"Default"},
+                         "name":"ibm-default"}},
+                   "identity":{
+                      "password":{
+                          "user":{
+                             "domain":{
+                                "name":"Default"},
+                             "password":"{{ PowerVC_password }}",
+                             "name":"{{ PowerVC_ID }}"}},
+                       "methods":["password"]}}}'
+         body_format: json
+         use_proxy: no
+         validate_certs: no
+         status_code: 201
+      register: auth
+
+    - name: Set Auth Token
+      set_fact:
+        auth_token: "{{ auth.x_subject_token }}"
+
+    - name: Display Auth Token
+      debug:
+        var: auth_token
+        verbosity: 1
+
+    - name: Connect to PowerVC with token collect project information
+      uri:
+        url: https://{{ powervc_host }}:{{ auth_port }}/v3/projects
+        method: GET
+        use_proxy: no
+        validate_certs: no
+        return_content: no
+        headers:
+          X-Auth-Token: "{{ auth_token }}"
+      register: project_information
+
+    - name: Collect ID of chosen project in array format
+      set_fact:
+        project_id_array: "{{ project_information.json | json_query(query) }}"
+      vars:
+        query: "projects[?name=='ibm-default'].{id: id}"
+
+    - name: Collect project ID for selected project
+      set_fact:
+        project_id: "{{ project_id_array.0['id'] }}"
+
+    - name: Show Project ID
+      debug:
+        var: project_id
+        verbosity: 1
+
+    - name: Connect to PowerVC with auth token and project ID to collect VM information
+      uri:
+        url: https://{{ powervc_host }}:{{ nova_port }}/v2.1/{{ project_id }}/servers
+        method: GET
+        use_proxy: no
+        validate_certs: no
+        return_content: no
+        headers:
+          X-Auth-Token: "{{ auth_token }}"
+      register: vm_information
+
+    - name: Collect ID of chosen VM in array format
+      set_fact:
+        vm_id_array: "{{ vm_information.json | json_query(query) }}"
+      vars:
+        query: "servers[?name=='{{ vm_name }}'].{id: id}"
+
+    - name: Collect VM ID for selected VM
+      set_fact:
+        vm_id: "{{ vm_id_array.0['id'] }}"
+
+    - name: Show VM ID
+      debug:
+        var: vm_id
+     #   verbosity: 1
+
+    - name: Connect to PowerVC with token and display VM details
+      uri:
+        url: https://{{ powervc_host }}:{{ nova_port }}/v2.1/{{ project_id }}/servers/{{ vm_id }}
+        method: GET
+        use_proxy: no
+        validate_certs: no
+        return_content: no
+        headers:
+          X-Auth-Token: "{{ auth_token }}"
+      register: vm_details
+    
+    - name: show VM details
+      debug:
+        var: vm_details
+        verbosity: 1
+
+    - name: Collect VM Details
+      # vCPUs in JSON are actually entitled, CPUs are actually virtual CPUS!
+      set_fact:
+        current_vm_spec_details: "{{ vm_details.json | json_query(query) }}"
+      vars:
+        query: 'server.
+           {name: name, CPUs: vcpus, vCPUs: cpus, Memory: memory_mb}'
+
+    - name: "Show current CPU and memory allocation for VM {{ vm_name }}"
+      debug:
+        msg:
+         - "VM name:          {{ current_vm_spec_details.name }}"
+         - "Current vCPU #:   {{ current_vm_spec_details.vCPUs }}"
+         - "Current CPU #:    {{ current_vm_spec_details.CPUs }}"
+         - "Current Mem(MB)#: {{ current_vm_spec_details.Memory }}"
+    
+    - name: Check if all desired values match current values. If so do not perform resize
+      block:
+      - name: Report all values are the same
+        debug:
+          msg: "All desired values match current values, ending playbook."
+      - name: End playbook
+        meta: end_play
+      when:
+        - current_vm_spec_details.name == vm_name     
+        - current_vm_spec_details.Memory  ==  new_total_memory_mb
+        - current_vm_spec_details.vCPUs == new_vcpus
+        - current_vm_spec_details.CPUs == new_total_proc_units
+
+    - name: "Connect to PowerVC with token and resize VM {{ vm_name }} to {{ new_total_proc_units }} procesors, and {{ new_total_memory_mb }}MB"
+      # vcpus, disk and ram are compulsory, the additional powervm values are optional (full list in v1)
+      uri:
+        url: https://{{ powervc_host }}:{{ nova_port }}/v2.1/{{ project_id }}/servers/{{ vm_id }}/action
+        method: POST
+        use_proxy: no
+        validate_certs: no
+        return_content: no
+        body: {
+                "resize": {
+                    "flavor": {
+                        "vcpus": "{{ new_vcpus }}",
+                        "disk": "32",
+                        "extra_specs": {
+                             "powervm:proc_units": "{{ new_total_proc_units }}",
+                        },
+                        "ram": "{{ new_total_memory_mb }}"
+                    }
+                }
+            }
+        body_format: json
+        headers:
+          Accept: "application/json"
+          Content-Type: "application/json"
+          OpenStack-API-Version: "compute 2.46"
+          User-Agent: "python-novaclient"
+          X-Auth-Token: "{{ auth_token }}"
+          X-OpenStack-Nova-API-Version: "2.46"
+        status_code: 202
+      register: vm_resize_details
+
+    - name: Show all VM resize details
+      debug:
+        var: vm_resize_details
+        verbosity: 1
+
+    - name: Connect to PowerVC with token and wait for VM {{ vm_name }} to be in state 'VERIFY_RESIZE'
+      uri:
+        url: https://{{ powervc_host }}:{{ nova_port }}/v2.1/{{ project_id }}/servers/{{ vm_id }}
+        method: GET
+        use_proxy: no
+        validate_certs: no
+        return_content: no
+        headers:
+          X-Auth-Token: "{{ auth_token }}"
+      register: vm_details_verify_resize
+      until: vm_details_verify_resize.json.server.status == "VERIFY_RESIZE"
+      retries: 6
+      delay: 10
+
+    - name: Show VM state for verify resize
+      debug:
+        var: vm_details_verify_resize
+        verbosity: 1
+
+    - name: Connect to PowerVC with token and confirm resize of VM {{ vm_name }}
+      uri:
+        url: https://{{ powervc_host }}:{{ nova_port }}/v2.1/{{ project_id }}/servers/{{ vm_id }}/action
+        method: POST
+        use_proxy: no
+        validate_certs: no
+        return_content: no
+        body: { "confirmResize" }
+        body_format: json
+        headers:
+          Accept: "application/json"
+          Content-Type: "application/json"
+          OpenStack-API-Version: "compute 2.46"
+          User-Agent: "python-novaclient"
+          X-Auth-Token: "{{ auth_token }}"
+          X-OpenStack-Nova-API-Version: "2.46"
+        status_code: 204
+      register: vm_confirm_resize_details
+
+    - name: Show confirm resize details
+      debug:
+        var: vm_confirm_resize_details
+        verbosity: 1
+
+    - name: Pause for 30 seconds to allow resizing to complete
+      pause:
+        seconds: 30
+
+    - name: Connect to PowerVC with token and collect new CPU and memory information for VM {{ vm_name }} after the resize
+      uri:
+        url: https://{{ powervc_host }}:{{ nova_port }}/v2.1/{{ project_id }}/servers/{{ vm_id }}
+        method: GET
+        use_proxy: no
+        validate_certs: no
+        return_content: no
+        headers:
+          X-Auth-Token: "{{ auth_token }}"
+      register: new_vm_details
+
+    - name: Collect VM Details following resize
+      # vCPUs in JSON are actually entitled, CPUs are actually virtual CPUS!
+      set_fact:
+        new_vm_spec_details: "{{ new_vm_details.json | json_query(query) }}"
+      vars:
+        query: 'server.
+           {name: name, CPUs: vcpus, vCPUs: cpus, Memory: memory_mb}'
+
+    - name: "Show new CPU and memory allocation for VM {{ vm_name }}"
+      debug:
+        var: new_vm_spec_details
