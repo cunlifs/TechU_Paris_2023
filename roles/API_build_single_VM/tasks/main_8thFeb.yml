@@ -1,0 +1,61 @@
+---
+#- name: Show values - to be removed
+#  debug:
+#    msg: "Proc type is {{ num_of_processors | type_debug }} and memory {{ size_of_memory | type_debug }}"
+
+## Convert num_of_processors to a floating variable (note: needs jinja2_native = True in ansible.cfg)
+#- name: Test processors to float
+#  set_fact:
+#     num_of_processors_float: "{{ num_of_processors | float }}"
+
+## Convert size_of_memory to an integer variable (note: needs jinja2_native = True in ansible.cfg)
+#- name: Set memory to integer
+#  set_fact:
+#     size_of_memory_int: "{{ size_of_memory | int }}"
+
+#- name: Show values - new
+#  debug:
+#    msg: "Proc type is now {{ num_of_processors_float | type_debug }} and memory {{ size_of_memory_int | type_debug }}"
+
+- name: Collect information about all the VSI's in this cloud instance
+  uri:
+    url: "https://{{ region }}.power-iaas.cloud.ibm.com/pcloud/{{ api_version }}/cloud-instances/{{ crn.service_instance }}/pvm-instances"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ pvs_access_token }}"
+      CRN: "crn:{{ crn.version }}:{{ crn.cname }}:{{ crn.ctype }}:{{ crn.service_name }}:{{ crn.location }}:a/{{ crn.scope }}:{{ crn.service_instance }}::"
+      Content-Type: application/json
+  register: pvs_existing_vsi_results
+
+- name: Set VSI list of names
+  set_fact:
+    vsi_names: "{{ vsi_names | default([]) + [item] }}"
+  with_items: "{{ pvs_existing_vsi_results | json_query(query_to_run) }}"
+  vars:
+    query_to_run: 'json.pvmInstances[*].serverName'
+
+- name: Check if new VSI is in list of existing VSIs
+  block:
+  - name: Report if {{ new_vm_name }} already exists
+    debug:
+      msg: "{{ new_vm_name }} already exists"
+  - name: End playbook
+    meta: end_play
+  when:
+    - new_vm_name in vsi_names
+
+- name: Build new VSI.....
+  uri:
+    url: "https://{{ region }}.power-iaas.cloud.ibm.com/pcloud/{{ api_version }}/cloud-instances/{{ crn.service_instance }}/pvm-instances"
+    method: POST
+    #force_basic_auth: true
+    #validate_certs: yes
+    status_code: 201
+    timeout: 600
+    body_format: json
+    body: "{{vsi_info|to_json}}"
+    headers:
+      Authorization: "Bearer {{ pvs_access_token }}"
+      CRN: "crn:{{ crn.version }}:{{ crn.cname }}:{{ crn.ctype }}:{{ crn.service_name }}:{{ crn.location }}:a/{{ crn.scope }}:{{ crn.service_instance }}::"
+      Content-Type: application/json
+  register: pvs_vsi_create_result

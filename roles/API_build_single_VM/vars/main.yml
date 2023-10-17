@@ -1,0 +1,19 @@
+---
+vsi_info:
+  serverName: "{{ new_vm_name }}"
+  imageID: "{{ image_id }}"
+  processors: "{{ num_of_processors }}"
+ # processors: "{{ num_of_processors | float}}"
+  procType: "{{ shared_or_dedicated }}"
+  memory: "{{ size_of_memory }}"
+#   memory: "{{ size_of_memory | int }}"
+  sysType: "{{ server_type }}"
+  storageType: "{{ storage_tier }}"
+  keyPairName: "awx30_keypair"
+  networkIDs:
+    - "public-192_168_150_152-29-VLAN_2015"
+
+vsi_clone_info:
+  name: "clone_vm"
+  networks:
+    networkID: "cae72df0-df1a-4c63-8004-86f1ad9e125b"

@@ -1,0 +1,56 @@
+---
+- name: Create VM using API calls
+  hosts: localhost
+  gather_facts: no
+
+  vars:
+    - pvs_access_token: "{{ iam_token_request.json.access_token }}"
+      auth_data: "grant_type=urn:ibm:params:oauth:grant-type:apikey&apikey="
+      region: "lon"
+      api_version: "v1"
+      crn:
+        version: "v1"
+        cname: "bluemix"
+        ctype: "public"
+        service_name: "power-iaas"
+        location: "lon04"
+        scope: "e68636c0fcf9d0c6bf689e78f6dfbc9f"
+        service_instance: "dd5a404f-59cb-4c04-b9a0-811b47c6df19"
+      
+  vars_files:
+    - vars/{{ pvs_location }}_vars.yml
+  
+  vars_prompt:
+    - name: "api_key"
+      prompt: "Enter API key:"
+    - name: "pvs_location"
+      prompt: "Enter PowerVS location e.g. lon06, lon04"
+    - name: "new_vm_name"
+      prompt: "Enter name of new VM:"
+    - name: "num_of_processors"
+      prompt: "Enter number of processors required, e.g. 0.25, 1.0"
+    - name: "shared_or_dedicated"
+      prompt: "Enter processor type (shared or dedicated):"
+    - name: "size_of_memory"
+      prompt: "Enter size of memory required (GB):"
+    - name: "server_type"
+      prompt: "Enter Server type (s922 or E980)"
+    - name: "storage_tier"
+      prompt: "Enter Storage Tier (tier1 or tier3)"
+    - name: "image_id"
+      prompt: "Image to use for new VM"
+
+  tasks:
+  - name: Get IAM acces token.....
+    include_role:
+      name: API_get_access_token
+
+  #- name: Check if VM exists
+  #  include_role:
+  #    name: API_check_VM_exists
+
+  - name: Build new VM.....
+    include_role:
+      name: API_build_single_VM
+
+

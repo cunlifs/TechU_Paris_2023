@@ -1,0 +1,13 @@
+---
+vsi_info:
+  serverName: "{{ new_vm_name }}"
+#  imageID: d60e0c03-7e3a-4d29-b811-819fd98e93ed
+  imageID: 4ae40f6f-1514-498d-bc27-ed47e5d3a634
+  processors: "{{ num_of_processors | float}}"
+  procType: "{{ shared_or_dedicated }}"
+  memory: "{{ size_of_memory | int }}"
+  sysType: "{{ server_type }}"
+  storageType: "{{ storage_tier }}"
+  keyPairName: "awx30_keypair"
+  networkIDs:
+    - "cae72df0-df1a-4c63-8004-86f1ad9e125b"
