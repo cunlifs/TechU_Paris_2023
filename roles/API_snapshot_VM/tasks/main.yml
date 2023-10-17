@@ -50,3 +50,21 @@
 - name: Show result of snapshot
   debug:
      var: vsi_snapshot_result
+     verbosity:1
+
+- name: Show snapshot informaiton
+  uri:
+    url: "https://{{ region }}.power-iaas.cloud.ibm.com/pcloud/{{ api_version }}/cloud-instances/{{ crn.service_instance }}/snapshots/{{ vsi_snapshot_result.json.snapshotID }}"
+    method: GET
+    status_code: 200
+    timeout: 600
+    headers:
+      Authorization: "Bearer {{ pvs_access_token }}"
+      CRN: "crn:{{ crn.version }}:{{ crn.cname }}:{{ crn.ctype }}:{{ crn.service_name }}:{{ crn.location }}:a/{{ crn.scope }}:{{ crn.service_instance }}::"
+      Content-Type: application/json
+  register: vsi_snapshot_information
+
+- name: Show snapshot details
+  debug:
+     var: vsi_snapshot_information
+     
