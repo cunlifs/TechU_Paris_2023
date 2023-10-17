@@ -46,3 +46,7 @@
       CRN: "crn:{{ crn.version }}:{{ crn.cname }}:{{ crn.ctype }}:{{ crn.service_name }}:{{ crn.location }}:a/{{ crn.scope }}:{{ crn.service_instance }}::"
       Content-Type: application/json
   register: vsi_snapshot_result
+
+ - name: Show result of snapshot
+   debug:
+     var: vsi_snapshot_result
