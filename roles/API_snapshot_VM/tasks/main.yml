@@ -12,6 +12,7 @@
 - name: SHow all
   debug:
       var: pvs_existing_vsi_results
+      verbosity: 1
 
 - name: Collect ID of chosen VSI in array format
   set_fact:
@@ -27,43 +28,21 @@
 - name: Show VSI ID
   debug:
       msg: "ID for {{ vm_name }} is: {{ vsi_id }}"
- 
-
-
-- meta: end_play
 
 - name: Snaphost VSI.....
   uri:
-    url: "https://{{ region }}.power-iaas.cloud.ibm.com/pcloud/{{ api_version }}/cloud-instances/{{ crn.service_instance }}/pvm-instances"
+    url: "https://{{ region }}.power-iaas.cloud.ibm.com/pcloud/{{ api_version }}/cloud-instances/{{ crn.service_instance }}/pvm-instances/{{ vsi_id }}/snapshots"
     method: POST
     #force_basic_auth: true
     #validate_certs: yes
-    status_code: 201
+    status_code: 202
     timeout: 600
     body_format: json
-    body: "{{vsi_info|to_json}}"
+    body: '{
+            "name": "{{ snapshot_name }}"
+            }' 
     headers:
       Authorization: "Bearer {{ pvs_access_token }}"
       CRN: "crn:{{ crn.version }}:{{ crn.cname }}:{{ crn.ctype }}:{{ crn.service_name }}:{{ crn.location }}:a/{{ crn.scope }}:{{ crn.service_instance }}::"
       Content-Type: application/json
-  register: pvs_vsi_create_result
-
-#- name: Clone new VSI.....
-#  uri:
-#    url: "https://{{ region }}.power-iaas.cloud.ibm.com/pcloud/{{ api_version }}/cloud-instances/{{ crn.service_instance }}/pvm-instances/12fca96e-a006-4904-8c14-08ea8325d143/clone"
-#    method: POST
-#    force_basic_auth: true
-#    validate_certs: yes
-#    status_code: 202
-#    timeout: 600
-#    body_format: json
-#    #body: "{{vsi_clone_info|to_json}}"
-#    body: 
-#      name: "clone-vm"
-#      networks:
-#          networkID: "cae72df0-df1a-4c63-8004-86f1ad9e125b"
-#    headers:
-#      Authorization: "Bearer {{ pvs_access_token }}"
-#      CRN: "crn:{{ crn.version }}:{{ crn.cname }}:{{ crn.ctype }}:{{ crn.service_name }}:{{ crn.location }}:a/{{ crn.scope }}:{{ crn.service_instance }}::"
-#      Content-Type: application/json
-#  register: pvs_vsi_create_result
+  register: vsi_snapshot_result
