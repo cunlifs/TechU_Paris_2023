@@ -66,5 +66,5 @@
 
 - name: Show snapshot details
   debug:
-     var: vsi_snapshot_information
+     var: vsi_snapshot_information.json
      
