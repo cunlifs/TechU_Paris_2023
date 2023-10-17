@@ -47,6 +47,6 @@
       Content-Type: application/json
   register: vsi_snapshot_result
 
- - name: Show result of snapshot
-   debug:
+- name: Show result of snapshot
+  debug:
      var: vsi_snapshot_result
