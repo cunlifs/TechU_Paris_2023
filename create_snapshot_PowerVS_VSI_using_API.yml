@@ -37,6 +37,6 @@
 
   - name: Snapshot VM.....
     include_role:
-      name: API_build_single_VM
+      name: API_snapshot_VM
 
 
