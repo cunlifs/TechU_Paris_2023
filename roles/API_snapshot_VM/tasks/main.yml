@@ -1,0 +1,69 @@
+---
+- name: Collect information about all the VSI's in this cloud instance
+  uri:
+    url: "https://{{ region }}.power-iaas.cloud.ibm.com/pcloud/{{ api_version }}/cloud-instances/{{ crn.service_instance }}/pvm-instances"
+    method: GET
+    headers:
+      Authorization: "Bearer {{ pvs_access_token }}"
+      CRN: "crn:{{ crn.version }}:{{ crn.cname }}:{{ crn.ctype }}:{{ crn.service_name }}:{{ crn.location }}:a/{{ crn.scope }}:{{ crn.service_instance }}::"
+      Content-Type: application/json
+  register: pvs_existing_vsi_results
+
+- name: SHow all
+  debug:
+      var: pvs_existing_vsi_results
+
+- name: Collect ID of chosen VSI in array format
+  set_fact:
+      vsi_id_array: "{{ pvs_existing_vsi_results.json | json_query(query) }}"
+  vars:
+      query: "pvmInstances[?serverName=='{{ vm_name }}'].{id: pvmInstanceID}"
+
+
+- name: Collect VSI ID for selected VM
+  set_fact:
+      vsi_id: "{{ vsi_id_array.0['id'] }}"
+
+- name: Show VSI ID
+  debug:
+      msg: "ID for {{ vm_name }} is: {{ vsi_id }}"
+ 
+
+
+- meta: end_play
+
+- name: Snaphost VSI.....
+  uri:
+    url: "https://{{ region }}.power-iaas.cloud.ibm.com/pcloud/{{ api_version }}/cloud-instances/{{ crn.service_instance }}/pvm-instances"
+    method: POST
+    #force_basic_auth: true
+    #validate_certs: yes
+    status_code: 201
+    timeout: 600
+    body_format: json
+    body: "{{vsi_info|to_json}}"
+    headers:
+      Authorization: "Bearer {{ pvs_access_token }}"
+      CRN: "crn:{{ crn.version }}:{{ crn.cname }}:{{ crn.ctype }}:{{ crn.service_name }}:{{ crn.location }}:a/{{ crn.scope }}:{{ crn.service_instance }}::"
+      Content-Type: application/json
+  register: pvs_vsi_create_result
+
+#- name: Clone new VSI.....
+#  uri:
+#    url: "https://{{ region }}.power-iaas.cloud.ibm.com/pcloud/{{ api_version }}/cloud-instances/{{ crn.service_instance }}/pvm-instances/12fca96e-a006-4904-8c14-08ea8325d143/clone"
+#    method: POST
+#    force_basic_auth: true
+#    validate_certs: yes
+#    status_code: 202
+#    timeout: 600
+#    body_format: json
+#    #body: "{{vsi_clone_info|to_json}}"
+#    body: 
+#      name: "clone-vm"
+#      networks:
+#          networkID: "cae72df0-df1a-4c63-8004-86f1ad9e125b"
+#    headers:
+#      Authorization: "Bearer {{ pvs_access_token }}"
+#      CRN: "crn:{{ crn.version }}:{{ crn.cname }}:{{ crn.ctype }}:{{ crn.service_name }}:{{ crn.location }}:a/{{ crn.scope }}:{{ crn.service_instance }}::"
+#      Content-Type: application/json
+#  register: pvs_vsi_create_result
