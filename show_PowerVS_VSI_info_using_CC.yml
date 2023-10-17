@@ -1,0 +1,24 @@
+---
+# Simple playbook to set facts about a VM from gathered facts and command execution
+- name: Show VM details
+  hosts: all
+  gather_facts: yes
+
+  collections:
+    - ibm.cloudcollection
+    
+  tasks:
+    - name: Collect existing Virtual Server Instance information
+      ibm.cloudcollection.ibm_pi_instance_info:
+         pi_instance_name: "{{ vsi_name }}"
+         pi_cloud_instance_id: "{{ pi_cloud_instance_id }}"
+         ibmcloud_api_key: "{{ ibmcloud_api_key }}"
+         region: "{{ region }}"
+  #failed_when:
+  #  - pi_instance_existing_output.rc != 0
+      register: pi_instance_existing_output
+
+    - name: Show PI Instance
+      debug:
+        var: pi_instance_existing_output
+    
