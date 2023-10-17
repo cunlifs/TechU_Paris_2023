@@ -50,9 +50,9 @@
 - name: Show result of snapshot
   debug:
      var: vsi_snapshot_result
-     verbosity:1
+     verbosity: 1
 
-- name: Show snapshot informaiton
+- name: Collect snapshot information
   uri:
     url: "https://{{ region }}.power-iaas.cloud.ibm.com/pcloud/{{ api_version }}/cloud-instances/{{ crn.service_instance }}/snapshots/{{ vsi_snapshot_result.json.snapshotID }}"
     method: GET
