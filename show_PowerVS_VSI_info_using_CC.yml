@@ -10,7 +10,7 @@
   tasks:
     - name: Collect existing Virtual Server Instance information
       ibm.cloudcollection.ibm_pi_instance_info:
-        pi_instance_name: "from_cc"
+         pi_instance_name: "from_cc"
          pi_cloud_instance_id: "{{ pi_cloud_instance_id }}"
          ibmcloud_api_key: "{{ api_key }}"
          region: "lon"
