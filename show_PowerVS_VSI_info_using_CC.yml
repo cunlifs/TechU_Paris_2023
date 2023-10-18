@@ -8,6 +8,9 @@
     - ibm.cloudcollection
     
   tasks:
+    - name: Show user 
+      command: "whoami"
+      
     - name: Collect existing Virtual Server Instance information
       ibm.cloudcollection.ibm_pi_instance_info:
          pi_instance_name: "from_cc"
