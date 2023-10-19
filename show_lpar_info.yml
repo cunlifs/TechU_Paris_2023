@@ -1,7 +1,7 @@
 ---
 # Simple playbook to set facts about a VM from gathered facts and command execution
 - name: Show VM details
-  hosts: all
+  hosts: {{ group_name }}
   gather_facts: yes
 
   collections:
