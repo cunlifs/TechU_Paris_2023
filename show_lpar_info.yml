@@ -6,6 +6,9 @@
 
   collections:
     - ibm.power_aix
+
+  vars:
+    - group_name: all
     
   tasks:
     - name: Collect LPAR information
