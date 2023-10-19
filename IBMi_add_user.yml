@@ -1,0 +1,20 @@
+---
+- name: Create IBMi users 
+  hosts: all
+  gather_facts: false
+  collections:
+    - ibm.power_ibmi
+  tasks:
+  - name: Create User
+    ibm.power_ibmi.ibmi_user_and_group:
+      operation: 'create'
+      user: 'ansible'
+    tags: create
+  - name: Display User
+    ibm.power_ibmi.ibmi_user_and_group:
+      operation: 'display'
+      user: 'ansible'
+    tags: display
+    register: userdata
+  - debug: var=userdata
+    tags: display
