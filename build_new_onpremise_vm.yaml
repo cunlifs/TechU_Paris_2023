@@ -84,8 +84,8 @@
         - "VM server: {{ VM_framename }}"
         - "VM state: {{ VM_state }}"
  
-  - name: Wait for SSH port to be up on {{ VM_Name }}
-    wait_for: 
-      host: "{{ VM_IP }}"
-      port: 22
-      timeout: 300
+  #- name: Wait for SSH port to be up on {{ VM_Name }}
+  #  wait_for: 
+  #    host: "{{ VM_IP }}"
+  #    port: 22
+  #    timeout: 300
