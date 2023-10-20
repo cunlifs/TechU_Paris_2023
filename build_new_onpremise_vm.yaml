@@ -41,7 +41,7 @@
       timeout:  1200
       network:  "{{ VM_Net_Name_1 }}"
       availability_zone: "Default Group:9119MHE_21C4837"
-   # key_name:  "AWX-30-key"     
+      key_name:  "AWX-30-key"     
       meta:
         hostname: "{{ VM_Name }}"
     register: vm
