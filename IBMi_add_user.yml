@@ -1,6 +1,6 @@
 ---
 - name: Create IBMi users 
-  hosts: all
+  hosts: techu-ibmi-vsi-1
   gather_facts: false
   collections:
     - ibm.power_ibmi
