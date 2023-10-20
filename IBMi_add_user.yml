@@ -8,12 +8,12 @@
   - name: Create User
     ibm.power_ibmi.ibmi_user_and_group:
       operation: 'create'
-      user: 'ansible'
+      user: 'demouser'
     tags: create
   - name: Display User
     ibm.power_ibmi.ibmi_user_and_group:
       operation: 'display'
-      user: 'ansible'
+      user: 'demouser'
     tags: display
     register: userdata
   - debug: var=userdata
