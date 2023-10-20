@@ -1,11 +1,14 @@
 ---
 # Simple playbook to set facts about a VM from gathered facts and command execution
 - name: Show VM details
-  hosts: all
+  hosts: "{{ group_name }}"
   gather_facts: yes
 
   collections:
     - ibm.power_aix
+
+  vars:
+    - group_name: all
     
   tasks:
     - name: Collect LPAR information
