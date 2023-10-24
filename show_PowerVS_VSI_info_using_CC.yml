@@ -16,7 +16,7 @@
          pi_instance_name: "techu-ibmi-vsi-1"
          pi_cloud_instance_id: "{{ pi_cloud_instance_id }}"
          ibmcloud_api_key: "{{ api_key }}"
-         region: "eu_gb"
+         region: "lon"
          zone: "lon04"
 #         pi_instance_name: "{{ vsi_name }}"
 #         pi_cloud_instance_id: "{{ pi_cloud_instance_id }}"
