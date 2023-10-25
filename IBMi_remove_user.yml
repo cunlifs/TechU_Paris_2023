@@ -13,6 +13,6 @@
 
   - name: Show result of remove user
     debug:
-      var: result_remove_user
+      var: result_remove_user.running_jobs.stdout
     
   
