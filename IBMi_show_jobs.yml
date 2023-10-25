@@ -1,0 +1,17 @@
+---
+- name: Check jobs 
+  hosts: techu-ibmi-vsi-1
+  gather_facts: false
+  collections:
+    - ibm.power_ibmi
+  tasks:
+  - name: Check jobs
+    ibm.power_ibmi.ibmi_cl_command:
+      cmd: 'WRKACTJOB'
+    register: running_jobs
+
+  - name: Show jobs
+    debug:
+      var: running_jobs
+    
+  
