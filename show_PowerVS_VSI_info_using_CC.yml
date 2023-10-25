@@ -21,5 +21,3 @@
       debug:
         var: pi_instance_existing_output
     
-    - name: add a user
-    
