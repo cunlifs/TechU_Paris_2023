@@ -7,11 +7,11 @@
   tasks:
   - name: Check jobs
     ibm.power_ibmi.ibmi_cl_command:
-      cmd: 'WRKTCPSTS *CNN'
+      cmd: 'WRKACTJOB'
     register: running_jobs
 
   - name: Show jobs
     debug:
-      var: running_jobs
+      msg: "{{ running_jobs.stdout }}""
     
   
