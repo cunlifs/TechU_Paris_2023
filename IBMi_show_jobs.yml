@@ -12,6 +12,6 @@
 
   - name: Show jobs
     debug:
-      msg: "{{ running_jobs.stdout }}"
+      var: running_jobs.stdout
     
   
