@@ -9,5 +9,10 @@
     ibm.power_ibmi.ibmi_user_and_group:
       operation: 'delete'
       user: 'demouser'
+    register: result_remove_user
+
+  - name: Show result of remove user
+    debug:
+      var: result_remove_user
     
   
