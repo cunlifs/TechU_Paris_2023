@@ -7,7 +7,7 @@
   tasks:
   - name: Check jobs
     ibm.power_ibmi.ibmi_cl_command:
-      cmd: 'NETSTAT *CNN'
+      cmd: 'WRKTCPSTS *CNN'
     register: running_jobs
 
   - name: Show jobs
