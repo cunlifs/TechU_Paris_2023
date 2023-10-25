@@ -1,0 +1,13 @@
+---
+- name: Remove IBMi users 
+  hosts: techu-ibmi-vsi-1
+  gather_facts: false
+  collections:
+    - ibm.power_ibmi
+  tasks:
+  - name: Remove User
+    ibm.power_ibmi.ibmi_user_and_group:
+      operation: 'delete'
+      user: 'demouser'
+    
+  
