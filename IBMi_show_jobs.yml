@@ -1,6 +1,6 @@
 ---
 - name: Check jobs 
-  hosts: techu-ibmi-vsi-1
+  hosts: all
   gather_facts: false
   collections:
     - ibm.power_ibmi
