@@ -10,11 +10,13 @@
       operation: 'create'
       user: 'demouser'
     tags: create
+
   - name: Display User
     ibm.power_ibmi.ibmi_user_and_group:
       operation: 'display'
       user: 'demouser'
     tags: display
     register: userdata
+    
   - debug: var=userdata
     tags: display
